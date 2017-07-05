@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        canvas {
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas width="800" height="600"></canvas>
+</body>
+<script src="js/flyBird.js"></script>
+<script>
+    var c = document.querySelector("canvas");
+    var ctx = c.getContext("2d");
+    //绘制
+    {
+        var startT = new Date();
+        var endT = new Date();
+        var offsetT = 0;
+
+        var gameS = new Date();
+        var gameE = 0;
+        var isRunning = false;
+    }
+
+    loadImg(["birds", "sky", "land", "pipe1", "pipe2"], function(imgList) {
+        var birdImg = imgList["birds"];
+        var skyImg = imgList["sky"];
+        var landImg = imgList["land"];
+        var topPipe = imgList["pipe2"];
+        var bottomPipe = imgList["pipe1"];
+
+        //创建天空函数
+        var sky = new Sky({
+            ctx: ctx,
+            skyImg: skyImg,
+            canvasX: 0,
+            canvasY: 0
+        });
+        var sky2 = new Sky({
+            ctx: ctx,
+            skyImg: skyImg,
+            canvasX: skyImg.width,
+            canvasY: 0
+        });
+
+        //创建管道函数
+        var pipeArr = [];
+        for (var i = 0; i < 6; i++) {
+            var pipe = new Pipe({
+                ctx: ctx,
+                topPipe: topPipe,
+                bottomPipe: bottomPipe,
+                canvasX: 300 + topPipe.width * i * 3,
+            })
+            pipeArr.push(pipe);
+        }
+
+        //创建陆地函数
+        var landArr = [];
+        for (var i = 0; i < 4; i++) {
+            var land = new Land({
+                ctx: ctx,
+                landImg: landImg,
+                canvasX: landImg.width * i,
+                canvasY: c.height - landImg.height
+            })
+            landArr.push(land);
+        };
+
+        //创建小鸟函数
+        var bird = new Bird({
+            ctx: ctx,
+            birdImg: birdImg,
+            canvasX: 100,
+            canvasY: 100
+        });
+
+
+
+        function fly() {
+            /*时间间隔需要重新获取，并将每次的开始时间赋值给结束时间---！important*/
+            startT = new Date();
+            offsetT = startT - endT;
+            endT = startT;
+
+            //清除之前的路径
+            ctx.beginPath();
+
+            ctx.clearRect(0, 0, c.width, c.height);
+            //绘制天空
+            sky.drawSky();
+            sky2.drawSky();
+
+            //绘制小鸟
+            bird.drawBird(offsetT);
+
+            //绘制管道
+            pipeArr.forEach(function(val, i) {
+                val.drawPipe();
+            })
+
+            //绘制陆地
+            landArr.forEach(function(val, i) {
+                val.drawLand();
+            });
+
+            gameE = new Date();
+            offsetG = (gameE - gameS);
+            var gameT = offsetG / 1000;
+            var hour = Math.floor(gameT / 3600);
+            var minute = Math.floor(gameT % 3600 / 60);
+            var sec = Math.floor(gameT % 60);
+            var str = "您已坚持了" + hour + "时" + minute + "分" + sec + "秒";
+            ctx.font = "20px 黑体";
+            var long = ctx.measureText(str).width;
+            console.log(long);
+            ctx.textBaseline = "top";
+            ctx.fillText(str, c.width / 2 - long / 2, 5);
+
+            //判断死掉的条件
+            if (bird.canvasY < 0 || bird.canvasY > c.height - landImg.height - birdImg.height) {
+                return;
+            }
+            if (ctx.isPointInPath(bird.canvasX + bird.birdW / 2, bird.canvasY + bird.birdH / 2)) {
+                return;
+            }
+
+            if (isRunning) {
+                window.requestAnimationFrame(fly);
+
+            }
+        }
+        fly();
+        ctx.fillText("点击开始", c.width / 2, c.height / 2)
+        c.onclick = function() {
+            if (!isRunning) {
+                isRunning = true;
+                endT = new Date();
+                fly();
+            } else {
+                bird.birdSpeed = -0.2;
+            }
+        }
+    })
+</script>
+
+</html>
