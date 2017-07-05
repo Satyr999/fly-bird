@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+
+<body>
+    <!DOCTYPE html>
+    <html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Document</title>
+        <style>
+            canvas {
+                border: 1px solid #ccc;
+            }
+        </style>
+    </head>
+
+    <body>
+        <canvas width="600" height="500"></canvas>
+    </body>
+    <script>
+        var c = document.querySelector("canvas");
+        var ctx = c.getContext("2d");
+
+        function loadImg(imgArr, callback) {
+            var count = 0;
+            var imgList = [];
+            for (var i = 0; i < imgArr.length; i++) {
+                var img = new Image();
+                img.src = "./images/" + imgArr[i] + ".png";
+                imgList[imgArr[i]] = img;
+                img.onload = function() {
+                    count++;
+                    if (count == imgArr.length) {
+                        callback(imgList);
+                    }
+                }
+            }
+            window.requestAnimationFrame(loadImg);
+        }
+        loadImg(["birds", "sky"], function(imgList) {
+            console.log(imgList);
+            var birdImg = imgList["birds"];
+            var skyImg = imgList["sky"];
+        })
+    </script>
+
+    </html>
+</body>
+
+</html>

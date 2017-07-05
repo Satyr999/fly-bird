@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        canvas {
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas width="800" height="600"></canvas>
+</body>
+<script src="js/sky.js"></script>
+<script src="js/bird.js"></script>
+<script>
+    var c = document.querySelector("canvas");
+    var ctx = c.getContext("2d");
+
+    function loadImg(imgArr, callback) {
+        var count = 0;
+        var imgList = [];
+        for (var i = 0; i < imgArr.length; i++) {
+            var img = new Image();
+            img.src = "./images/" + imgArr[i] + ".png";
+            imgList[imgArr[i]] = img;
+            img.onload = function() {
+                count++;
+                if (count == imgArr.length) {
+                    callback(imgList);
+                }
+            }
+        }
+        window.requestAnimationFrame(loadImg);
+    };
+
+    {
+        var canvasX = 100;
+        var canvasY = 100;
+        var birdIndex = 0;
+
+        var birdSpeed = 0; //小鸟初速度
+        var g = 0.0003; //重力
+        var startT = new Date();
+        var endT = new Date();
+        var offsetT = 0;
+        /*小鸟头部旋转的最大角度*/
+        var maxAngle = 45;
+        //小鸟的最大下落速度--canvasY>c.height时的第一个速度
+        var maxSpeed = 0.45;
+    };
+
+    loadImg(["birds", "sky"], function(imgList) {
+        var birdImg = imgList["birds"];
+        var skyImg = imgList["sky"];
+
+        var birdW = birdImg.width / 3;
+        var birdH = birdImg.height;
+        var birdX = 0;
+
+        var skyX1 = new Sky({
+            ctx: ctx,
+            skyImg: skyImg,
+            canvasX: 0,
+            canvasY: 0
+        });
+        var skyX2 = new Sky({
+            ctx: ctx,
+            skyImg: skyImg,
+            canvasX: skyImg.width,
+            canvasY: 0
+        });
+
+
+        function fly() {
+            startT = new Date();
+            offsetT = startT - endT;
+            endT = startT;
+
+            /*重力加速度公式：
+             *移动距离=速度*时间间隔+g*时间间隔*时间间隔/2；
+             *末速度=初速度+g*时间间隔
+             */
+            /*birdSpeed = birdSpeed + g * offsetT;
+            var distanceY = birdSpeed * offsetT + g * offsetT * offsetT / 2;
+            canvasY += distanceY;
+            //计算小鸟过程中头部需要旋转的角度
+            var currentAngle = maxAngle * birdSpeed / maxSpeed;
+            if (currentAngle > 45) {
+                currentAngle = 45;
+            }
+
+            //让当前画布的变换不影响其他的内容
+            birdX = birdIndex * birdW;*/
+            ctx.clearRect(0, 0, c.width, c.height);
+
+            skyX1.drawSky();
+            skyX2.drawSky();
+
+            /*ctx.save();
+            //实现偏移
+            ctx.translate(canvasX + birdW / 2, canvasY + birdH / 2);
+            //实现旋转
+            ctx.rotate(Math.PI / 180 * currentAngle);
+            //绘制
+            //ctx.drawImage(图片，素材X，素材Y，素材W，素材H，画布X，画布Y，素材W，素材H)；
+            ctx.drawImage(birdImg, birdX, 0, birdW, birdH, -birdW / 2, -birdH / 2, birdW, birdH);
+            ctx.restore();
+
+            birdIndex++;
+            if (birdIndex > 2) {
+                birdIndex = 0;
+            }*/
+            //这句代码放最后，相当于递归
+            window.requestAnimationFrame(fly);
+        }
+        fly();
+        c.onclick = function() {
+            bird.birdSpeed = -0.2;
+        }
+    });
+</script>
+
+</html>

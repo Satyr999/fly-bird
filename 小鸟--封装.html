@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        canvas {
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <canvas width="800" height="600"></canvas>
+</body>
+<script src="js/sky.js"></script>
+<script src="js/bird.js"></script>
+<script src="js/land.js"></script>
+<script src="js/pipe.js"></script>
+<script>
+    var c = document.querySelector("canvas");
+    var ctx = c.getContext("2d");
+
+    function loadImg(imgArr, callback) {
+        var count = 0;
+        var imgList = [];
+        for (var i = 0; i < imgArr.length; i++) {
+            var img = new Image();
+            img.src = "./images/" + imgArr[i] + ".png";
+            imgList[imgArr[i]] = img;
+            img.onload = function() {
+                count++;
+                if (count == imgArr.length) {
+                    callback(imgList);
+                }
+            }
+        }
+        window.requestAnimationFrame(loadImg);
+    };
+
+    {
+        var canvasX = 100;
+        var canvasY = 100;
+
+        var startT = new Date();
+        var endT = new Date();
+        var offsetT = 0;
+
+        var gameStartTime = new Date();
+        var gameOverTime = 0;
+
+        var isRunning = false;
+    };
+
+    loadImg(["birds", "sky", "land", "pipe1", "pipe2"], function(imgList) {
+        var birdImg = imgList["birds"];
+        var skyImg = imgList["sky"];
+        var landImg = imgList["land"];
+        var bottomImg = imgList["pipe1"];
+        var topImg = imgList["pipe2"];
+
+        //绘制天空
+        var skyX1 = new Sky({
+            ctx: ctx,
+            skyImg: skyImg,
+            canvasX: 0,
+            canvasY: 0
+        });
+        var skyX2 = new Sky({
+            ctx: ctx,
+            skyImg: skyImg,
+            canvasX: skyImg.width,
+            canvasY: 0
+        });
+
+        //绘制小鸟
+        var bird = new Bird({
+            ctx: ctx,
+            birdImg: birdImg,
+            canvasX: 100,
+            canvasY: 100
+        })
+
+        //绘制管道
+        var pipeArr = [];
+        for (var i = 0; i < 6; i++) {
+            var pipe = new Pipes({
+                ctx: ctx,
+                topImg: topImg,
+                bottomImg: bottomImg,
+                canvasX: 300 + i * topImg.width * 3
+            })
+            pipeArr.push(pipe);
+        }
+
+        //绘制陆地
+        var landArr = [];
+        for (var i = 0; i < 4; i++) {
+            var land = new Land({
+                ctx: ctx,
+                landImg: landImg,
+                canvasX: landImg.width * i,
+                canvasY: c.height - landImg.height
+            });
+            landArr.push(land);
+        }
+
+
+
+        function fly() {
+            startT = new Date();
+            offsetT = startT - endT;
+            endT = startT;
+
+            ctx.beginPath();
+            skyX1.drawSky();
+            skyX2.drawSky();
+
+            bird.drawBird(offsetT);
+
+            pipeArr.forEach(function(val, i) {
+                val.drawPipes();
+            })
+
+            var gameOverTime = new Date();
+            offset = (gameOverTime - gameStartTime);
+            var gameT = offset / 1000;
+            var hour = Math.floor(gameT / 3600);
+            var minute = Math.floor(gameT % 3600 / 60);
+            var sec = Math.floor(gameT % 60);
+            var str = "您已坚持了" + hour + "时" + minute + "分" + sec + "秒";
+            ctx.font = "20px 黑体";
+            var long = ctx.measureText(str).width;
+            console.log(long);
+            ctx.textBaseline = "top";
+            ctx.fillText(str, c.width / 2 - long / 2, 5);
+
+            for (var i = 0; i < landArr.length; i++) {
+                landArr[i].drawLand();
+            }
+
+            if (bird.canvasY < 0 || bird.canvasY > c.height - landImg.height - birdImg.height) {
+                return;
+            }
+
+            if (ctx.isPointInPath(bird.canvasX + bird.birdW / 2, bird.canvasY + bird.birdH / 2)) {
+                return;
+            };
+
+            if (isRunning) {
+                //这句代码放最后，相当于递归
+                window.requestAnimationFrame(fly);
+            }
+
+        }
+        fly();
+        ctx.fillText("点击开始", c.width / 2, c.height / 2);
+
+        c.onclick = function() {
+            if (!isRunning) {
+                isRunning = true;
+                endT = new Date();
+                fly();
+            } else {
+                bird.birdSpeed = -0.2;
+            }
+        }
+    });
+</script>
+
+</html>
